@@ -6,12 +6,16 @@ const PORT = process.env.PORT;
 import "./db/connection"
 import { pool } from "./db/connection";
 import userRoutes from "./routes/userRoutes";
+import folderRoutes from "./routes/folderRoutes";
 
 //middleware
 app.use(express.json());
 
 //routes
 app.use("/api/user", userRoutes);
+
+//folder routes
+app.use("/api/folders", folderRoutes);
 
 // test
 // app.get("/", async (req, res) => {
