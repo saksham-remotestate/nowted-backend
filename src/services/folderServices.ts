@@ -35,9 +35,9 @@ export const updateFolderService = async (id: string, name: string) => {
 };
 
 export const deleteFolderService = async (id: string) => {
-  const result = pool.query(
+  const result = await pool.query(
     "DELETE FROM folders WHERE id = $1 RETURNING id, name, created_at, updated_at, archived_at",
     [id]
   );
-  return (await result).rows[0];
+  return result.rows[0];
 };

@@ -80,13 +80,11 @@ export const updateFolder = async (req: Request, res: Response) => {
     handleResponse(res, 500, "Internal server error");
   }
 };
-
 export const deleteFolder = async (req: Request, res: Response) => {
   try {
     const folder = await deleteFolderService(req.params.id);
-    console.log(folder);
-    if (!folder) return handleResponse(res, 400, "Folder not found", []);
-    handleResponse(res, 200, "User deleted successfully", folder);
+    if (!folder) return handleResponse(res, 404, "Folder not found", []);
+    handleResponse(res, 200, "Folder deleted successfully", folder);
   } catch (error) {
     console.log("deleteFolder: ", error);
     handleResponse(res, 500, "Internal server error");

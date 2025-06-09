@@ -40,9 +40,9 @@ export const updateUserService = async (
 };
 
 export const deleteUserService = async (id: string) => {
-  const result = pool.query(
+  const result = await pool.query(
     "DELETE FROM users WHERE id = $1 RETURNING id, username, email",
     [id]
   );
-  return (await result).rows[0];
+  return result.rows[0];
 };
