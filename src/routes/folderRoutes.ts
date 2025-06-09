@@ -1,5 +1,5 @@
 import express from "express";
-import { createFolder, deleteFolder, getAllFolders, getFolderById, updateFolder } from "../controller/folderController";
+import { createFolder, deleteFolder, getAllFolders, getFolderById, restoreFolder, updateFolder } from "../controller/folderController";
 
 const router = express.Router();
 
@@ -8,5 +8,7 @@ router.get("/", getAllFolders);
 router.get("/:id", getFolderById);
 router.patch("/:id", updateFolder);
 router.delete("/:id", deleteFolder);
+router.patch("/:id/restore", restoreFolder)
 
 export default router;
+    

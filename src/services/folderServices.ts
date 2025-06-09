@@ -4,7 +4,7 @@ const TEMPORARY_ID = "c293042d-7bb9-4477-bd0f-01cee63f41c6";
 
 export const getAllFoldersService = async () => {
   const result = await pool.query(
-    "SELECT id, name, created_at, updated_at, archived_at FROM folders WHERE user_id = $1",
+    "SELECT id, name, created_at, updated_at, archived_at FROM folders WHERE user_id = $1 AND archived_at IS NULL",
     [TEMPORARY_ID]
   );
   return result.rows;
@@ -36,7 +36,15 @@ export const updateFolderService = async (id: string, name: string) => {
 
 export const deleteFolderService = async (id: string) => {
   const result = await pool.query(
-    "DELETE FROM folders WHERE id = $1 RETURNING id, name, created_at, updated_at, archived_at",
+    "UPDATE folders SET archived_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING  id, name, created_at, updated_at, archived_at",
+    [id]
+  );
+  return result.rows[0];
+};
+
+export const restoreFolderService = async (id: string) => {
+  const result = await pool.query(
+    "UPDATE folders SET archived_at = null WHERE id = $1 RETURNING  id, name, created_at, updated_at, archived_at",
     [id]
   );
   return result.rows[0];

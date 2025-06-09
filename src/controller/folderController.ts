@@ -5,6 +5,7 @@ import {
   deleteFolderService,
   getAllFoldersService,
   getFolderByIdService,
+  restoreFolderService,
   updateFolderService,
 } from "../services/folderServices";
 import { z } from "zod";
@@ -80,6 +81,7 @@ export const updateFolder = async (req: Request, res: Response) => {
     handleResponse(res, 500, "Internal server error");
   }
 };
+
 export const deleteFolder = async (req: Request, res: Response) => {
   try {
     const folder = await deleteFolderService(req.params.id);
@@ -90,3 +92,14 @@ export const deleteFolder = async (req: Request, res: Response) => {
     handleResponse(res, 500, "Internal server error");
   }
 };
+
+export const restoreFolder = async (req: Request, res: Response) => {
+  try {
+    const folder = await restoreFolderService(req.params.id);
+    if (!folder) return handleResponse(res, 404, "Folder not found", []);
+    handleResponse(res, 200, "Folder restored successfully", folder);
+  } catch (error) {
+    console.log("restoreFolder: ", error);
+    handleResponse(res, 500, "Internal server error");
+  }
+};                                 
