@@ -21,7 +21,7 @@ export const createUserService = async (
   console.log(username, email);
 
   const result = await pool.query(
-    "INSERT INTO users(username, email, password) VALUES($1, $2, $3) RETURNING *",
+    "INSERT INTO users(username, email, password) VALUES($1, $2, $3) RETURNING id, username, email",
     [username, email, password]
   );
   return result.rows[0];
@@ -33,16 +33,16 @@ export const updateUserService = async (
   email: string
 ) => {
   const result = await pool.query(
-    "UPDATE users SET username = $1, email = $2 WHERE id = $3 RETURNING id, username, email;",
+    "UPDATE users SET username = $1, email = $2 WHERE id = $3 RETURNING id, username, email",
     [username, email, id]
   );
   return result.rows[0];
 };
 
 export const deleteUserService = async (id: string) => {
-  const result = pool.query(
-    "DELETE FROM users WHERE id = $1 RETURNING RETURNING {id, username, email}",
+  const result = await pool.query(
+    "DELETE FROM users WHERE id = $1 RETURNING id, username, email",
     [id]
   );
-  return (await result).rows[0];
+  return result.rows[0];
 };
