@@ -7,6 +7,7 @@ import "./db/connection"
 import { pool } from "./db/connection";
 import userRoutes from "./routes/userRoutes";
 import folderRoutes from "./routes/folderRoutes";
+import noteRoutes from "./routes/noteRoutes";
 
 //middleware
 app.use(express.json());
@@ -16,6 +17,9 @@ app.use("/api/user", userRoutes);
 
 //folder routes
 app.use("/api/folders", folderRoutes);
+
+//notes routes
+app.use("/api/notes", noteRoutes)
 
 // test
 // app.get("/", async (req, res) => {
