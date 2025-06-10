@@ -4,7 +4,7 @@ const poolConfig = {
   host: process.env.DB_HOST ?? "",
   user: process.env.DB_USER ?? "",
   password: process.env.DB_PASSWORD ?? "",
-  port: Number(process.env.DB_PORT) ?? "",
+  port: Number(process.env.DB_PORT) ?? 5432,
   database: process.env.DB_NAME ?? "",
 };
 
@@ -17,7 +17,7 @@ async function dbConnection() {
   } catch (error) {
     console.error("db not connected");
   }
-};
+}
 
 (() => {
   dbConnection();

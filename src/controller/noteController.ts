@@ -35,9 +35,33 @@ const handleResponse = (
 };
 
 export const getAllNotes = async (req: Request, res: Response) => {
+  // const { archived, favorite, deleted, folderId, page, limit, search } = req.query;
+  const archived = req.query.archived?.toString() || "false";
+  const favorite = req.query.favorite?.toString() || "false";
+  const deleted = req.query.deleted?.toString() || "false";
+  const folderId = req.query.folderId?.toString() || null;
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+  const search = req.query.search?.toString() || "";
   try {
-    const notes = await getAllNotesService();
-    handleResponse(res, 200, "Notes fetched successfully", notes);
+    if (!folderId) {
+      console.log("Folder Id is required");``
+      return handleResponse(res, 400, "Folder ID is required");
+    }
+
+    const notes = await getAllNotesService(
+      archived,
+      favorite,
+      deleted,
+      folderId,
+      page,
+      limit,
+      search
+    );
+    handleResponse(res, 200, "Notes fetched successfully", {
+      notes,
+      count: notes.length,
+    });
   } catch (error) {
     console.log("getAllNotes: ", error);
     handleResponse(res, 500, "Internal server error");
