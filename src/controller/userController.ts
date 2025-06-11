@@ -60,13 +60,16 @@ export const createUser = async (req: Request, res: Response) => {
   }
 };
 
-export const getAllUsers = async (req: Request, res: Response) => {
+export const
+  getAllUsers = async (req: Request, res: Response) => {
   try {
+    console.log("Gello");
     const users = await getAllUsersService();
-    handleResponse(res, 200, "Users fetched successfully", users);
+    console.log(users);
+    return handleResponse(res, 200, "Users fetched successfully", users);
   } catch (error) {
     console.log("getAllUsers: ", error);
-    handleResponse(res, 500, "Internal server error");
+    return handleResponse(res, 500, "Internal server error");
   }
 };
 
@@ -130,7 +133,7 @@ export const loginUser = async (req: Request, res: Response) => {
     }
     const token = jwt.sign(
       { id: user.id },
-      process.env.JWT_TOKEN ?? "JWT_TOKEN",
+      process.env.ACCESS_TOKEN_SECRET ?? "ACCESS_TOKEN_SECRET",
       {
         expiresIn: "1d",
       }
@@ -141,12 +144,37 @@ export const loginUser = async (req: Request, res: Response) => {
       return handleResponse(res, 400, "Something went wrong");
     }
 
-    return handleResponse(res, 200, "User logged in successfully", {
-      ...user,
-      token,
-    });
+    const refreshToken = jwt.sign(
+      { id: user.id },
+      process.env.REFRESH_TOKEN_SECRET ?? "REFRESH_TOKEN_SECRET"
+    );
+
+    if (!refreshToken) {
+      console.log("unable to generate refresh token");
+      return handleResponse(res, 400, "Something went wrong");
+    }
+
+    res.cookie("token", token, { httpOnly: true });
+    res.cookie("refresh_token", refreshToken, { httpOnly: true });
+
+    delete user.password
+
+    return handleResponse(res, 200, "User logged in successfully", user);
   } catch (error) {
     console.log("loginUser: ", error);
-    handleResponse(res, 500, "Internal server error");
+    return handleResponse(res, 500, "Internal server error");
   }
 };
+
+// export const getRefreshToken = async (req: Request, res: Response) => {
+//   try {
+//     const refreshToken = req.cookies.refresh_token;
+//     if (!refreshToken) {
+//       console.log("refresh token is null");
+//       handleResponse(res, 401, "Refresh token is missing")
+//     }
+//     jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET ?? "REFRESH_TOKEN_SECRET", )
+//   } catch (error) {
+
+//   }
+// }

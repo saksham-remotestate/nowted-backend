@@ -9,7 +9,8 @@ export const getAllNotesService = async (
   folderId: string,
   page: number,
   limit: number,
-  search: string
+  search: string,
+  user_id: string,
 ) => {
   const conditionalQuery =
     archived === "false"
@@ -55,12 +56,12 @@ export const getAllNotesService = async (
     trashNotes +
     ` offset ${offset}  limit ${limit}`;
 
-  const result = await pool.query(query, [TEMPORARY_ID, folderId]);
+  const result = await pool.query(query, [user_id, folderId]);
 
   return result.rows;
 };
 
-export const getNoteByIdService = async (id: string) => {
+export const getNoteByIdService = async (id: string, user_id: string) => {
   const result = await pool.query(
     `SELECT
     n.id,
@@ -80,12 +81,12 @@ export const getNoteByIdService = async (id: string) => {
   FROM notes n
   JOIN folders f ON f.id = n.folder_id AND f.archived_at IS NULL
   WHERE n.user_id = $1 AND n.archived_at IS NULL AND n.id = $2`,
-    [TEMPORARY_ID, id]
+    [user_id, id]
   );
   return result.rows[0];
 };
 
-export const getRecentNotesService = async () => {
+export const getRecentNotesService = async (user_id: string) => {
   const result = await pool.query(
     `SELECT
     n.id,
@@ -106,7 +107,7 @@ export const getRecentNotesService = async () => {
   JOIN folders f ON f.id = n.folder_id
   WHERE n.user_id = $1 AND n.archived_at IS NULL
   ORDER BY n.updated_at DESC LIMIT 3`,
-    [TEMPORARY_ID]
+    [user_id]
   );
   return result.rows;
 };
@@ -116,11 +117,12 @@ export const createNoteService = async (
   title: string,
   content: string,
   is_favorite: boolean,
-  is_archive: boolean
+  is_archive: boolean,
+  user_id: string
 ) => {
   const result = await pool.query(
     "INSERT INTO notes(folder_id, title, content, is_favorite, is_archive, user_id) VALUES($1, $2, $3, $4, $5, $6) RETURNING id",
-    [folder_id, title, content, is_favorite, is_archive, TEMPORARY_ID]
+    [folder_id, title, content, is_favorite, is_archive, user_id]
   );
   return result.rows[0];
 };
@@ -131,27 +133,28 @@ export const updateNoteService = async (
   content: string,
   is_favorite: boolean,
   is_archive: boolean,
-  id: string
+  id: string,
+  user_id: string
 ) => {
   const result = await pool.query(
-    "UPDATE notes SET folder_id = $1, title = $2, content = $3, is_favorite = $4, is_archive = $5, updated_at = CURRENT_TIMESTAMP WHERE id = $6 RETURNING id",
-    [folder_id, title, content, is_favorite, is_archive, id]
+    "UPDATE notes SET folder_id = $1, title = $2, content = $3, is_favorite = $4, is_archive = $5, updated_at = CURRENT_TIMESTAMP WHERE id = $6 AND user_id = $7 RETURNING id",
+    [folder_id, title, content, is_favorite, is_archive, id, user_id]
   );
   return result.rows[0];
 };
 
-export const deleteNoteService = async (id: string) => {
+export const deleteNoteService = async (id: string, user_id: string) => {
   const result = await pool.query(
-    "UPDATE notes SET archived_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING id",
-    [id]
+    "UPDATE notes SET archived_at = CURRENT_TIMESTAMP WHERE id = $1 AND user_id = $2 RETURNING id",
+    [id, user_id]
   );
   return result.rows[0];
 };
 
-export const restoreNoteService = async (id: string) => {
+export const restoreNoteService = async (id: string, user_id: string) => {
   const result = await pool.query(
     "UPDATE notes SET archived_at = null WHERE id = $1 RETURNING id",
-    [id]
+    [id, user_id]
   );
   return result.rows[0];
 };

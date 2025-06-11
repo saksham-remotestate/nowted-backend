@@ -4,6 +4,7 @@ import "./db/connection";
 import folderRoutes from "./routes/folderRoutes";
 import noteRoutes from "./routes/noteRoutes";
 import userRoutes from "./routes/userRoutes";
+import { authMiddleware } from "./middleware/auth.middleware";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -15,10 +16,10 @@ app.use(express.json());
 app.use("/api/user", userRoutes);
 
 //folder routes
-app.use("/api/folders", folderRoutes);
+app.use("/api/folders", authMiddleware, folderRoutes);
 
 //notes routes
-app.use("/api/notes", noteRoutes);
+app.use("/api/notes", authMiddleware, noteRoutes);
 
 // test
 // app.get("/", async (req, res) => {

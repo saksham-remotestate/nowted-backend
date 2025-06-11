@@ -4,12 +4,12 @@ import { authMiddleware } from "../middleware/auth.middleware";
 
 const router = express.Router();
 
-router.post("/", createFolder);
+router.post("/", authMiddleware, createFolder);
 router.get("/", authMiddleware, getAllFolders);
-router.get("/:id", getFolderById);
-router.patch("/:id", updateFolder);
-router.delete("/:id", deleteFolder);
-router.patch("/:id/restore", restoreFolder)
+router.get("/:id", authMiddleware, getFolderById);
+router.patch("/:id", authMiddleware, updateFolder);
+router.delete("/:id", authMiddleware, deleteFolder);
+router.patch("/:id/restore", authMiddleware, restoreFolder)
 
 export default router;
     

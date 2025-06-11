@@ -6,8 +6,8 @@ export const authMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader?.split(" ")[1];
+  const token = req.headers["authorization"]?.split(" ")[1];
+
   if (!token) {
     console.log("token missing");
     res.send({
@@ -17,15 +17,21 @@ export const authMiddleware = (
     return;
   }
 
-  jwt.verify(token, process.env.JWT_TOKEN ?? "123", (err, user) => {
-    if (err) {
-      res.send({
-        status: 403,
-        message: "Access denied",
-      });
-      return;
+  jwt.verify(
+    token,
+    process.env.ACCESS_TOKEN_SECRET ?? "ACCESS_TOKEN_SECRET",
+    (err, user) => {
+      if (err) {
+        res.send({
+          status: 403,
+          error: err.message,
+        });
+        return;
+      }
+
+      req.user = user;
+      console.log(req.user.id);
     }
-    console.log(user);
-  });
+  );
   next();
 };
