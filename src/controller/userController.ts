@@ -4,10 +4,13 @@ import {
   createUserService,
   deleteUserService,
   getAllUsersService,
+  getUserByEmailService,
   getUserByIdService,
   updateUserService,
 } from "../services/userServices";
 import { userData } from "../interface/user.type";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 const handleResponse = (
   res: Response,
@@ -44,7 +47,12 @@ export const createUser = async (req: Request, res: Response) => {
     return handleResponse(res, 400, validate.error);
   }
   try {
-    const newUser = await createUserService(username, email, password);
+    const hashedPassword = await bcrypt.hash(password, 10);
+    if (!hashedPassword) {
+      console.log("unable to generate hashed password");
+      return handleResponse(res, 500, "Internal server error");
+    }
+    const newUser = await createUserService(username, email, hashedPassword);
     handleResponse(res, 201, "User created successfully", newUser);
   } catch (error) {
     console.log("createUser: ", error);
@@ -96,6 +104,49 @@ export const deleteUser = async (req: Request, res: Response) => {
     handleResponse(res, 200, "User deleted successfully", user);
   } catch (error) {
     console.log("deleteUser: ", error);
+    handleResponse(res, 500, "Internal server error");
+  }
+};
+
+export const loginUser = async (req: Request, res: Response) => {
+  try {
+    const validate = userSchema.omit({ username: true }).safeParse(req.body);
+    if (!validate.success) {
+      return handleResponse(res, 400, validate.error);
+    }
+    const user = await getUserByEmailService(validate.data.email);
+    if (!user) {
+      console.log("user does not exist");
+      return handleResponse(res, 400, "Invalid credentials");
+    }
+    const isValidPassword = await bcrypt.compare(
+      validate.data.password,
+      user.password
+    );
+
+    if (!isValidPassword) {
+      console.log("invalid password");
+      return handleResponse(res, 400, "Invalid credentials");
+    }
+    const token = jwt.sign(
+      { id: user.id },
+      process.env.JWT_TOKEN ?? "JWT_TOKEN",
+      {
+        expiresIn: "1d",
+      }
+    );
+
+    if (!token) {
+      console.log("unable to generate token");
+      return handleResponse(res, 400, "Something went wrong");
+    }
+
+    return handleResponse(res, 200, "User logged in successfully", {
+      ...user,
+      token,
+    });
+  } catch (error) {
+    console.log("loginUser: ", error);
     handleResponse(res, 500, "Internal server error");
   }
 };

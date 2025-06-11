@@ -15,7 +15,7 @@ export const getAllNotesService = async (
     archived === "false"
       ? favorite === "false"
         ? " and (n.is_archive = false or n.is_favorite = true)"
-        : "and (n.is_archive = false and n.is_favorite = true)"
+        : " and (n.is_archive = false and n.is_favorite = true)"
       : "and (n.is_archive = true)";
 
   const trashNotes =

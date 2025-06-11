@@ -9,6 +9,7 @@ import {
   updateNoteService,
 } from "../services/noteServices";
 import { z } from "zod";
+import { noteType } from "../interface/note.type";
 
 const noteSchema = z.object({
   folderId: z.string({ required_error: "folder_id is required" }).uuid(),
@@ -25,12 +26,14 @@ const handleResponse = (
   res: Response,
   status: number,
   message: string | any,
-  notes?: any | null
+  notes?: noteType | noteType[] | null,
+  count?: number
 ) => {
   res.status(status).json({
     status,
     message,
     notes,
+    count,
   });
 };
 
@@ -45,7 +48,8 @@ export const getAllNotes = async (req: Request, res: Response) => {
   const search = req.query.search?.toString() || "";
   try {
     if (!folderId) {
-      console.log("Folder Id is required");``
+      console.log("Folder Id is required");
+      ``;
       return handleResponse(res, 400, "Folder ID is required");
     }
 
@@ -58,10 +62,7 @@ export const getAllNotes = async (req: Request, res: Response) => {
       limit,
       search
     );
-    handleResponse(res, 200, "Notes fetched successfully", {
-      notes,
-      count: notes.length,
-    });
+    handleResponse(res, 200, "Notes fetched successfully", notes, notes.length);
   } catch (error) {
     console.log("getAllNotes: ", error);
     handleResponse(res, 500, "Internal server error");
