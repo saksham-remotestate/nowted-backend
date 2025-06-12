@@ -60,8 +60,7 @@ export const createUser = async (req: Request, res: Response) => {
   }
 };
 
-export const
-  getAllUsers = async (req: Request, res: Response) => {
+export const getAllUsers = async (_req: Request, res: Response) => {
   try {
     console.log("Gello");
     const users = await getAllUsersService();
@@ -135,7 +134,7 @@ export const loginUser = async (req: Request, res: Response) => {
       { id: user.id },
       process.env.ACCESS_TOKEN_SECRET ?? "ACCESS_TOKEN_SECRET",
       {
-        expiresIn: "1d",
+        expiresIn: "30s",
       }
     );
 
@@ -157,7 +156,7 @@ export const loginUser = async (req: Request, res: Response) => {
     res.cookie("token", token, { httpOnly: true });
     res.cookie("refresh_token", refreshToken, { httpOnly: true });
 
-    delete user.password
+    delete user.password;
 
     return handleResponse(res, 200, "User logged in successfully", user);
   } catch (error) {
@@ -166,15 +165,50 @@ export const loginUser = async (req: Request, res: Response) => {
   }
 };
 
-// export const getRefreshToken = async (req: Request, res: Response) => {
-//   try {
-//     const refreshToken = req.cookies.refresh_token;
-//     if (!refreshToken) {
-//       console.log("refresh token is null");
-//       handleResponse(res, 401, "Refresh token is missing")
-//     }
-//     jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET ?? "REFRESH_TOKEN_SECRET", )
-//   } catch (error) {
+export const logoutUser = async (req: Request, res: Response) => {
+  res.clearCookie("token");
+  res.clearCookie("refresh_token");
+  handleResponse(res, 200, "User logged out successfully")
+};
 
-//   }
-// }
+export const getRefreshToken = async (req: Request, res: Response) => {
+  try {
+    // const refreshToken = req.cookies.refresh_token;
+    const refreshToken = req.headers.cookie
+      ? req.headers.cookie.split(" ")[0].split("=")[1]
+      : null;
+    console.log("refresh token: ",refreshToken)
+    if (!refreshToken) {
+      console.log("refresh token is null");
+      handleResponse(res, 401, "Refresh token is missing");
+      return;
+    }
+    jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET ?? "REFRESH_TOKEN_SECRET",
+      (
+        error: jwt.VerifyErrors | null,
+        _user: string | jwt.JwtPayload | undefined
+      ) => {
+        if (error) {
+          console.log(error.message);
+          handleResponse(res, 403, error.message);
+        }
+        const token = jwt.sign(
+          { id: req.user.id },
+          process.env.ACCESS_TOKEN_SECRET ?? "ACCESS_TOKEN_SECRET",
+          {
+            expiresIn: "1d",
+          }
+        );
+        if (!token) {
+          console.log("unable to generate token");
+          return handleResponse(res, 400, "Something went wrong");
+        }
+        res.cookie("token", token, { httpOnly: true });
+      }
+    );
+  } catch (error) {
+    handleResponse(res, 401, "Unauthenticated user");
+  }
+};

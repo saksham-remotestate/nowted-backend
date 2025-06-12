@@ -3,8 +3,10 @@ import {
   createUser,
   deleteUser,
   getAllUsers,
+  getRefreshToken,
   getUserById,
   loginUser,
+  logoutUser,
   updateUser,
 } from "../controller/userController";
 
@@ -16,5 +18,7 @@ router.get("/:id", getUserById);
 router.patch("/:id", updateUser);
 router.delete("/:id", deleteUser);
 router.post("/login", loginUser);
+router.post("/logout", logoutUser);
+router.get("/token", getRefreshToken)
 
 export default router;
