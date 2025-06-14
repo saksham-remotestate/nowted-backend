@@ -1,12 +1,13 @@
-import express from "express";
 import "dotenv/config";
+import express from "express";
+import "./db/connection";
+import folderRoutes from "./routes/folderRoutes";
+import noteRoutes from "./routes/noteRoutes";
+import userRoutes from "./routes/userRoutes";
+import { authMiddleware } from "./middleware/auth.middleware";
 
 const app = express();
-const PORT = process.env.PORT;
-import "./db/connection"
-import { pool } from "./db/connection";
-import userRoutes from "./routes/userRoutes";
-import folderRoutes from "./routes/folderRoutes";
+const PORT = process.env.PORT || 8000;
 
 //middleware
 app.use(express.json());
@@ -15,7 +16,10 @@ app.use(express.json());
 app.use("/api/user", userRoutes);
 
 //folder routes
-app.use("/api/folders", folderRoutes);
+app.use("/api/folders", authMiddleware, folderRoutes);
+
+//notes routes
+app.use("/api/notes", authMiddleware, noteRoutes);
 
 // test
 // app.get("/", async (req, res) => {
@@ -24,4 +28,6 @@ app.use("/api/folders", folderRoutes);
 //   res.send(result);
 // });
 
-app.listen(PORT,()=>{console.log("server is running at port: ",PORT)});
+app.listen(PORT, () => {
+  console.log("server is running at port: ", PORT);
+});
