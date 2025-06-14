@@ -1,7 +1,5 @@
 import { pool } from "../db/connection";
 
-const TEMPORARY_ID = "c293042d-7bb9-4477-bd0f-01cee63f41c6";
-
 export const getAllNotesService = async (
   archived: string,
   favorite: string,

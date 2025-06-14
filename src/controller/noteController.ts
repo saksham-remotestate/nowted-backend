@@ -12,14 +12,14 @@ import { z } from "zod";
 import { noteType } from "../interface/note.type";
 
 const noteSchema = z.object({
-  folderId: z.string({ required_error: "folder_id is required" }).uuid(),
+  folderId: z.string({ required_error: "folderId is required" }).uuid(),
   title: z
     .string({ required_error: "title is required" })
     .trim()
     .min(1, "title should be at least 1 character long"),
   content: z.string({ required_error: "content is required" }),
-  isFavorite: z.boolean({ required_error: "is_favorite is required" }),
-  isArchive: z.boolean({ required_error: "is_archive is required" }),
+  isFavorite: z.boolean({ required_error: "isFavorite is required" }),
+  isArchive: z.boolean({ required_error: "isArchive is required" }),
 });
 
 const handleResponse = (
@@ -50,7 +50,6 @@ export const getAllNotes = async (req: Request, res: Response) => {
   try {
     if (!folderId) {
       console.log("Folder Id is required");
-      ``;
       return handleResponse(res, 400, "Folder ID is required");
     }
 

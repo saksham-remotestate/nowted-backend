@@ -6,11 +6,16 @@ export const authMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
-  const token = req.headers["authorization"]?.split(" ")[1];
+  // const token = req.headers["authorization"]?.split(" ")[1];
+  // const token = req.cookies.token;
+
+  const token = req.headers.cookie
+    ? req.headers.cookie.split(" ")[1].split("=")[1]
+    : null;
 
   if (!token) {
     console.log("token missing");
-    res.send({
+    res.status(401).json({
       status: 401,
       message: "unauthenticated user",
     });
@@ -22,7 +27,7 @@ export const authMiddleware = (
     process.env.ACCESS_TOKEN_SECRET ?? "ACCESS_TOKEN_SECRET",
     (err, user) => {
       if (err) {
-        res.send({
+        res.status(403).json({
           status: 403,
           error: err.message,
         });

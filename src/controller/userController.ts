@@ -11,6 +11,7 @@ import {
 import { userData } from "../interface/user.type";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { jwtDecode } from "jwt-decode";
 
 const handleResponse = (
   res: Response,
@@ -60,10 +61,9 @@ export const createUser = async (req: Request, res: Response) => {
   }
 };
 
-export const
-  getAllUsers = async (req: Request, res: Response) => {
+export const getAllUsers = async (_req: Request, res: Response) => {
   try {
-    console.log("Gello");
+    // console.log("Hello");
     const users = await getAllUsersService();
     console.log(users);
     return handleResponse(res, 200, "Users fetched successfully", users);
@@ -135,7 +135,7 @@ export const loginUser = async (req: Request, res: Response) => {
       { id: user.id },
       process.env.ACCESS_TOKEN_SECRET ?? "ACCESS_TOKEN_SECRET",
       {
-        expiresIn: "1d",
+        expiresIn: "30s",
       }
     );
 
@@ -146,8 +146,15 @@ export const loginUser = async (req: Request, res: Response) => {
 
     const refreshToken = jwt.sign(
       { id: user.id },
-      process.env.REFRESH_TOKEN_SECRET ?? "REFRESH_TOKEN_SECRET"
+      process.env.REFRESH_TOKEN_SECRET ?? "REFRESH_TOKEN_SECRET",
+      {
+        expiresIn: "2d",
+      }
     );
+
+    const decodedRefreshToken: { id: string; iat: number } =
+      jwtDecode(refreshToken);
+    console.log(decodedRefreshToken);
 
     if (!refreshToken) {
       console.log("unable to generate refresh token");
@@ -157,7 +164,7 @@ export const loginUser = async (req: Request, res: Response) => {
     res.cookie("token", token, { httpOnly: true });
     res.cookie("refresh_token", refreshToken, { httpOnly: true });
 
-    delete user.password
+    delete user.password;
 
     return handleResponse(res, 200, "User logged in successfully", user);
   } catch (error) {
@@ -166,15 +173,59 @@ export const loginUser = async (req: Request, res: Response) => {
   }
 };
 
-// export const getRefreshToken = async (req: Request, res: Response) => {
-//   try {
-//     const refreshToken = req.cookies.refresh_token;
-//     if (!refreshToken) {
-//       console.log("refresh token is null");
-//       handleResponse(res, 401, "Refresh token is missing")
-//     }
-//     jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET ?? "REFRESH_TOKEN_SECRET", )
-//   } catch (error) {
+export const logoutUser = async (req: Request, res: Response) => {
+  res.clearCookie("token");
+  res.clearCookie("refresh_token");
+  handleResponse(res, 200, "User logged out successfully");
+};
 
-//   }
-// }
+export const getRefreshToken = async (req: Request, res: Response) => {
+  try {
+    const refreshToken = req.headers.cookie
+      ? req.headers.cookie.split(" ")[0].split("=")[1]
+      : null;
+
+    if (!refreshToken) {
+      console.log("refresh token is null");
+      handleResponse(res, 401, "Refresh token is missing");
+      return;
+    }
+
+    const decodedRefreshToken: { id: string; iat: number } =
+      jwtDecode(refreshToken);
+    console.log(decodedRefreshToken);
+
+    console.log(refreshToken);
+    console.log(process.env.REFRESH_TOKEN_SECRET);
+
+    jwt.verify(
+      refreshToken.slice(0, refreshToken.length - 1).trim(),
+      process.env.REFRESH_TOKEN_SECRET ?? "REFRESH_TOKEN_SECRET",
+      (
+        error: jwt.VerifyErrors | null,
+        _user: string | jwt.JwtPayload | undefined
+      ) => {
+        if (error) {
+          console.log(error.message, error);
+          handleResponse(res, 403, error.message);
+          return;
+        }
+        const token = jwt.sign(
+          { id: decodedRefreshToken.id },
+          process.env.ACCESS_TOKEN_SECRET ?? "ACCESS_TOKEN_SECRET",
+          {
+            expiresIn: "1d",
+          }
+        );
+        if (!token) {
+          console.log("unable to generate token");
+          return handleResponse(res, 400, "Something went wrong");
+        }
+        res.cookie("token", token, { httpOnly: true });
+        return res.json({});
+      }
+    );
+  } catch (error) {
+    handleResponse(res, 401, "Unauthenticated user");
+  }
+};
